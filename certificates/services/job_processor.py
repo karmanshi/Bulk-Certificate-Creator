@@ -5,7 +5,7 @@ from .processor import process_recipient
 
 def process_generation_job(job):
     job.status = "PROCESSING"
-    job.save(update_field=["status"])
+    job.save(update_fields=["status"])
 
     recipients = job.recipients.all()
     for recipient in recipients:

@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Bulk Certificate Generator</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #6b7280;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 220px;
+            padding: 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        button {
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .primary-btn {
+            background: #2563eb;
+            color: white;
+            margin-top: 15px;
+        }
+
+        .primary-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .secondary-btn {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .job-info {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat {
+            background: #f9fafb;
+            padding: 18px;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .status.PENDING {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status.PROCESSING {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status.COMPLETED {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status.COMPLETED_WITH_ERRORS {
+            background: #ffedd5;
+            color: #9a3412;
+        }
+
+        .status.FAILED {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .progress-container {
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            width: 0%;
+            background: #2563eb;
+            transition: width 0.3s ease;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th,
+        td {
+            padding: 13px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f9fafb;
+        }
+
+        .download-btn {
+            background: #16a34a;
+            color: white;
+            padding: 8px 12px;
+        }
+
+        .download-btn:hover {
+            background: #15803d;
+        }
+
+        .error {
+            color: #dc2626;
+            margin-top: 12px;
+            white-space: pre-wrap;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .job-info {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>Bulk Certificate Generator</h1>
+        <p>Create certificates for multiple recipients and track generation status.</p>
+    </div>
+
+    <!-- CREATE JOB -->
+    <div class="card">
+
+        <h2>Create Certificate Job</h2>
+
+        <p>
+            Enter recipients in JSON format:
+        </p>
+
+        <textarea id="recipientData">{
+    "recipients": [
+        {
+            "name": "Rahul Sharma",
+            "email": "rahul@example.com"
+        },
+        {
+            "name": "Priya Sharma",
+            "email": "priya@example.com"
+        }
+    ]
+}</textarea>
+
+        <br>
+
+        <button
+            class="primary-btn"
+            onclick="createJob()">
+            Generate Certificates
+        </button>
+
+        <div
+            id="createError"
+            class="error">
+        </div>
+
+    </div>
+
+
+    <!-- JOB STATUS -->
+
+    <div
+        id="jobSection"
+        class="card hidden">
+
+        <h2>Job Status</h2>
+
+        <p>
+            Job ID:
+            <strong id="jobId"></strong>
+        </p>
+
+        <p>
+            Status:
+            <span
+                id="jobStatus"
+                class="status">
+            </span>
+        </p>
+
+        <div class="job-info">
+
+            <div class="stat">
+                <div class="stat-label">
+                    Total
+                </div>
+
+                <div
+                    id="totalCount"
+                    class="stat-value">
+                    0
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">
+                    Successful
+                </div>
+
+                <div
+                    id="successCount"
+                    class="stat-value">
+                    0
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">
+                    Failed
+                </div>
+
+                <div
+                    id="failedCount"
+                    class="stat-value">
+                    0
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">
+                    Progress
+                </div>
+
+                <div
+                    id="progressText"
+                    class="stat-value">
+                    0%
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="progress-container">
+
+            <div class="progress-bar">
+
+                <div
+                    id="progress"
+                    class="progress">
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- RECIPIENT RESULTS -->
+
+    <div
+        id="resultsSection"
+        class="card hidden">
+
+        <h2>Recipients</h2>
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Certificate</th>
+                        <th>Error</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="recipientTable">
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    let currentJobId = null;
+    let pollingTimer = null;
+
+
+    async function createJob() {
+
+        const errorBox =
+            document.getElementById("createError");
+
+        errorBox.textContent = "";
+
+        let data;
+
+        try {
+
+            data = JSON.parse(
+                document.getElementById(
+                    "recipientData"
+                ).value
+            );
+
+        } catch (error) {
+
+            errorBox.textContent =
+                "Invalid JSON format.";
+
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch("/api/jobs/", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify(data)
+                });
+
+
+            const result =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                errorBox.textContent =
+                    JSON.stringify(
+                        result,
+                        null,
+                        2
+                    );
+
+                return;
+            }
+
+
+            currentJobId =
+                result.job_id;
+
+
+            document
+                .getElementById("jobSection")
+                .classList.remove("hidden");
+
+
+            document
+                .getElementById("resultsSection")
+                .classList.remove("hidden");
+
+
+            updateJobUI(result);
+
+
+            loadJobStatus();
+
+        } catch (error) {
+
+            errorBox.textContent =
+                "Unable to connect to the server.";
+
+        }
+
+    }
+
+
+    async function loadJobStatus() {
+
+        if (!currentJobId) {
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/jobs/${currentJobId}/`
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                console.error(data);
+
+                return;
+            }
+
+
+            updateJobUI(data);
+
+
+            updateRecipients(
+                data.recipients || []
+            );
+
+
+            if (
+                data.status === "PENDING" ||
+                data.status === "PROCESSING"
+            ) {
+
+                pollingTimer =
+                    setTimeout(
+                        loadJobStatus,
+                        1000
+                    );
+
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+        }
+
+    }
+
+
+    function updateJobUI(data) {
+
+        document
+            .getElementById("jobId")
+            .textContent =
+            data.job_id;
+
+
+        const statusElement =
+            document.getElementById(
+                "jobStatus"
+            );
+
+
+        statusElement.textContent =
+            data.status;
+
+
+        statusElement.className =
+            "status " + data.status;
+
+
+        document
+            .getElementById("totalCount")
+            .textContent =
+            data.total_recipients;
+
+
+        document
+            .getElementById("successCount")
+            .textContent =
+            data.successful_count;
+
+
+        document
+            .getElementById("failedCount")
+            .textContent =
+            data.failed_count;
+
+
+        const completed =
+            data.successful_count +
+            data.failed_count;
+
+
+        const total =
+            data.total_recipients;
+
+
+        let percentage = 0;
+
+
+        if (total > 0) {
+
+            percentage =
+                Math.round(
+                    (completed / total) * 100
+                );
+
+        }
+
+
+        document
+            .getElementById("progress")
+            .style.width =
+            percentage + "%";
+
+
+        document
+            .getElementById("progressText")
+            .textContent =
+            percentage + "%";
+
+    }
+
+
+    function updateRecipients(recipients) {
+
+        const table =
+            document.getElementById(
+                "recipientTable"
+            );
+
+
+        table.innerHTML = "";
+
+
+        recipients.forEach(
+            recipient => {
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                let certificate = "-";
+
+
+                if (
+                    recipient.status ===
+                    "SUCCESS" &&
+                    recipient.certificate_url
+                ) {
+
+                    certificate =
+                        `<a
+                            href="${recipient.certificate_url}"
+                            target="_blank">
+                            <button
+                                class="download-btn">
+                                Download
+                            </button>
+                        </a>`;
+
+                }
+
+
+                row.innerHTML = `
+
+                    <td>
+                        ${recipient.recipient_id}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            recipient.name
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            recipient.email
+                        )}
+                    </td>
+
+                    <td>
+                        <span
+                            class="status
+                            ${recipient.status}">
+                            ${recipient.status}
+                        </span>
+                    </td>
+
+                    <td>
+                        ${certificate}
+                    </td>
+
+                    <td>
+                        ${
+                            recipient.error_message
+                            ? escapeHtml(
+                                recipient.error_message
+                            )
+                            : "-"
+                        }
+                    </td>
+
+                `;
+
+
+                table.appendChild(row);
+
+            }
+        );
+
+    }
+
+
+    function escapeHtml(value) {
+
+        const div =
+            document.createElement("div");
+
+        div.textContent = value || "";
+
+        return div.innerHTML;
+
+    }
+
+</script>
+
+</body>
+</html>

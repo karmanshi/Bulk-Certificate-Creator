@@ -1,7 +1,7 @@
 from certificates.models import GenerationJob, Recipient
 
 def create_generation_job(validate_data):
-    recipients_data = validate_data["reccipients"]
+    recipients_data = validate_data["recipients"]
     job = GenerationJob.objects.create(
         total_recipients = len(recipients_data)
     )

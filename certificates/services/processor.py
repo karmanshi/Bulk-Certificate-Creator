@@ -11,7 +11,7 @@ def process_recipient(recipient):
 
     try:
         output_dir  = Path(settings.MEDIA_ROOT)/"certificates"
-        output_dir.mkdir(parents=True,exists_ok = True)
+        output_dir.mkdir(parents=True,exist_ok = True)
         output_path = output_dir /f"certificate_{recipient.id}.pdf"
 
         generate_certificate(
@@ -43,7 +43,7 @@ def process_recipient(recipient):
         recipient.save(
             update_fields = [
                 "status",
-                "error message",
+                "error_message",
             ]
         )
         return recipient

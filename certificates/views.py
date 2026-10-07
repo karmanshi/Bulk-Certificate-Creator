@@ -1,3 +1,4 @@
+from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
@@ -20,11 +21,11 @@ class GenerationJobCreateView(APIView):
         )
 
         ## this is if we want to run the job in request not in background
-        # process_generation_job(job)
-        # job.refresh_from_db()
+        process_generation_job(job)
+        job.refresh_from_db()
 
 
-        start_job_in_background(job.id)
+        # start_job_in_background(job.id)
 
         return Response(
             {
@@ -41,9 +42,11 @@ class GenerationJobDetailView(APIView):
 
     def get(self, request, job_id):
         try:
+            print("Hereeeeeeeeeeee")
             job = GenerationJob.objects.prefetch_related(
                 "recipients"
             ).get(id=job_id)
+            print("Here")
 
         except GenerationJob.DoesNotExist:
             return Response(
@@ -105,3 +108,11 @@ class CertificateDownloadView(APIView):
                 },
                 status=status.HTTP_404_NOT_FOUND
             )    
+
+class DashboardView(APIView):
+
+    def get(self, request):
+        return render(
+            request,
+            "dashboard.html"
+        )
