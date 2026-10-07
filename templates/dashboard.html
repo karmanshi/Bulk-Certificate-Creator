@@ -438,7 +438,7 @@
         class="card hidden">
 
         <h2>
-            Certificate Results
+            All Certificates
         </h2>
 
         <div class="table-container">
@@ -476,7 +476,30 @@
     let currentJobId = null;
     let pollingTimer = null;
 
+    async function loadAllCertificates() {
+        try {
+            const response = await fetch("/api/certificates/");
 
+            if (!response.ok) {
+                throw new Error("Failed to load certificates");
+            }
+
+            const certificates = await response.json();
+
+            document
+                .getElementById("resultsSection")
+                .classList.remove("hidden");
+
+            updateRecipients(certificates);
+
+        } catch (error) {
+            console.error(
+                "Failed to load certificates:",
+                error
+            );
+        }
+    }
+    loadAllCertificates();
     /*
      * ADD RECIPIENT
      */
@@ -731,7 +754,8 @@
             updateJobUI(result);
 
 
-            loadJobStatus();
+            // loadJobStatus();
+            loadAllCertificates();
 
         } catch (error) {
 
@@ -1020,6 +1044,7 @@
 
     }
 
+    
 </script>
 
 </body>
