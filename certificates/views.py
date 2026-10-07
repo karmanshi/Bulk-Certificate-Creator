@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from .models import GenerationJob, Recipient
-from .serializers import GenerationJobSerializer, GenerationJobDetailSerializer
+from .serializers import GenerationJobSerializer, GenerationJobDetailSerializer, RecipientResultSerializer
 from .services import create_generation_job, process_generation_job
 from .services.background_processor import start_job_in_background
 from django.http import FileResponse
@@ -115,4 +115,22 @@ class DashboardView(APIView):
         return render(
             request,
             "dashboard.html"
+        )
+
+class CertificateListView(APIView):
+
+    def get(self, request):
+        recipients = Recipient.objects.select_related(
+            "job"
+        ).all().order_by("-created_At")
+
+        serializer = RecipientResultSerializer(
+            recipients,
+            many=True,
+            context={"request": request}
+        )
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
         )

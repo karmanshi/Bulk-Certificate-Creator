@@ -4,7 +4,8 @@ from .views import (
     DashboardView,
     GenerationJobCreateView,
     GenerationJobDetailView,
-    CertificateDownloadView
+    CertificateDownloadView,
+    CertificateListView
 )
 
 template_patterns=[
@@ -31,5 +32,10 @@ urlpatterns = [
         "certificates/<int:recipient_id>/download/",
         CertificateDownloadView.as_view(),
         name="certificate-download"
+    ),
+    path(
+        "certificates/",
+        CertificateListView.as_view(),
+        name="certificate-list"
     ),
 ]
